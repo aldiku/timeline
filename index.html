@@ -78,12 +78,14 @@
     </div>
 
     <div class="flex gap-3 mt-8">
-        <button id="reset-btn"
-            class="px-5 py-2 text-white text-lg bg-green-600 rounded hover:bg-green-700">Reset</button>
+        <button id="reset-btn" class="px-5 py-2 text-white text-lg bg-green-600 rounded hover:bg-green-700">Reset
+            Default</button>
         <button id="settings-toggle"
             class="px-5 py-2 text-white text-lg bg-green-600 rounded hover:bg-green-700">Settings</button>
         <button id="theme-btn" class="px-5 py-2 text-white text-lg bg-green-600 rounded hover:bg-green-700">Switch to
             Light Mode</button>
+        <button id="stop-btn" class="px-5 py-2 text-white text-lg bg-green-600 rounded hover:bg-green-700">Stop And
+            Reset Timer</button>
     </div>
 
     <div id="setting" class="w-full max-w-3xl mt-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg hidden">
@@ -200,6 +202,7 @@
         const elapsedValue = document.getElementById('elapsed-value');
         const totalValue = document.getElementById('total-value');
         const timelineProgressPhase = document.getElementById('timeline-progress-phase');
+        const stopBtn = document.getElementById('stop-btn');
 
         let state = {
             currentPhase: 0,
@@ -220,9 +223,13 @@
             startTime: null
         };
 
+
+
+        
+
         document.addEventListener('DOMContentLoaded', function () {
 
-
+            stopBtn.addEventListener('click', stopAndResetTimer);
             stateForm.value = JSON.stringify(state);
             stateForm.addEventListener('change', () => {
                 try {
@@ -267,7 +274,18 @@
                 stateForm.value = JSON.stringify(state, null, 2);
             }
 
-
+            function stopAndResetTimer() {
+                const confirmReset = confirm("Are you sure you want to reset the timer?");
+                if (!confirmReset) return;
+                state.isPaused = false;
+                state.startTime = null;
+                state.timeLeft = 0;
+                state.currentPhase = 0;
+                state.timerInterval = null;
+                localStorage.setItem('state', JSON.stringify(state));
+                syncStateForm();
+                location.reload();
+            }
 
             function initializeTimelineEditor() {
                 timelineEditor.innerHTML = '';
@@ -278,7 +296,7 @@
                     phaseRow.innerHTML = `
             <input type="text" class="phase-title flex-1 p-2 rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="${phase.title}" placeholder="Phase title">
             <input type="number" class="phase-duration w-24 p-2 rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="${phase.duration}" min="1" placeholder="Seconds">
-            <span class="remove-phase text-lg">🗑️</span>
+            <span class="remove-phase text-lg cursor-pointer">🗑️</span>
         `;
 
                     timelineEditor.appendChild(phaseRow);
