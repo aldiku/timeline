@@ -106,7 +106,8 @@
         </div>
 
         <div class="mb-4 border border-gray-300 dark:border-gray-600 p-4 rounded">
-            Copy or paste the configuration here or create new from form above to save, this template is shareable, so you can just copy this template and paste it to another device to use it <br>
+            Copy or paste the configuration here or create new from form above to save, this template is shareable, so
+            you can just copy this template and paste it to another device to use it <br>
             Configuration Template: <br>
             <textarea name="state_form" id="state_form" cols="30" rows="7"
                 class="w-full p-2 rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
@@ -115,6 +116,9 @@
         <div class="flex gap-3 justify-end">
             <button id="cancel-btn"
                 class="px-5 py-2 text-gray-800 text-lg bg-gray-200 rounded hover:bg-gray-300 dark:text-white dark:bg-gray-600 dark:hover:bg-gray-700">Cancel</button>
+            <button id="copy-btn"
+                class="px-5 py-2 text-gray-800 text-lg bg-gray-200 rounded hover:bg-gray-300 dark:text-white dark:bg-gray-600 dark:hover:bg-gray-700"
+                onclick="copyState()">Copy</button>
             <button id="save-btn" class="px-5 py-2 text-white text-lg bg-green-600 rounded hover:bg-green-700">Save
                 Settings</button>
         </div>
@@ -175,47 +179,49 @@
     </script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // DOM Elements
-            const currentTimeElement = document.getElementById('current-time-value');
-            const countdownElement = document.getElementById('countdown');
-            const phaseTitleElement = document.getElementById('phase-title');
-            const timelineItemsContainer = document.getElementById('timeline-items');
-            const timelineProgress = document.getElementById('timeline-progress');
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-            const resetBtn = document.getElementById('reset-btn');
-            const pauseBtn = document.getElementById('pause-btn');
-            const settingsToggle = document.getElementById('settings-toggle');
-            const settingPanel = document.getElementById('setting');
-            const cancelBtn = document.getElementById('cancel-btn');
-            const saveBtn = document.getElementById('save-btn');
-            const addPhaseBtn = document.getElementById('add-phase');
-            const timerModeSelect = document.getElementById('timer_mode');
-            const timelineEditor = document.getElementById('timeline-editor');
-            const stateForm = document.getElementById('state_form');
-            const elapsedValue = document.getElementById('elapsed-value');
-            const totalValue = document.getElementById('total-value');
-            const timelineProgressPhase = document.getElementById('timeline-progress-phase');
+        // DOM Elements
+        const currentTimeElement = document.getElementById('current-time-value');
+        const countdownElement = document.getElementById('countdown');
+        const phaseTitleElement = document.getElementById('phase-title');
+        const timelineItemsContainer = document.getElementById('timeline-items');
+        const timelineProgress = document.getElementById('timeline-progress');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const settingsToggle = document.getElementById('settings-toggle');
+        const settingPanel = document.getElementById('setting');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const saveBtn = document.getElementById('save-btn');
+        const addPhaseBtn = document.getElementById('add-phase');
+        const timerModeSelect = document.getElementById('timer_mode');
+        const timelineEditor = document.getElementById('timeline-editor');
+        const stateForm = document.getElementById('state_form');
+        const elapsedValue = document.getElementById('elapsed-value');
+        const totalValue = document.getElementById('total-value');
+        const timelineProgressPhase = document.getElementById('timeline-progress-phase');
 
-            let state = {
-                currentPhase: 0,
-                timeLeft: 0,
-                timerMode: 'mundur',
-                timelineData: [
-                    { title: "Perkenalan", duration: 60 },
-                    { title: "Presentasi", duration: 660 },
-                    { title: "QnA", duration: 205 },
-                    { title: "Ice Breaking", duration: 500 },
-                    { title: "Kerja Group", duration: 1000 },
-                    { title: "Quis Break", duration: 300 },
-                    { title: "Penutupan", duration: 60 }
-                ],
-                isPaused: false,
-                timerInterval: null,
-                totalDuration: 0,
-                startTime: null
-            };
+        let state = {
+            currentPhase: 0,
+            timeLeft: 0,
+            timerMode: 'mundur',
+            timelineData: [
+                { title: "Perkenalan", duration: 60 },
+                { title: "Presentasi", duration: 660 },
+                { title: "QnA", duration: 205 },
+                { title: "Ice Breaking", duration: 500 },
+                { title: "Kerja Group", duration: 1000 },
+                { title: "Quis Break", duration: 300 },
+                { title: "Penutupan", duration: 60 }
+            ],
+            isPaused: false,
+            timerInterval: null,
+            totalDuration: 0,
+            startTime: null
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
+
 
             stateForm.value = JSON.stringify(state);
             stateForm.addEventListener('change', () => {
@@ -261,27 +267,57 @@
                 stateForm.value = JSON.stringify(state, null, 2);
             }
 
+
+
             function initializeTimelineEditor() {
                 timelineEditor.innerHTML = '';
+
                 state.timelineData.forEach((phase, index) => {
                     const phaseRow = document.createElement('div');
                     phaseRow.className = 'flex gap-3 items-center timeline-row';
                     phaseRow.innerHTML = `
-                        <input type="text" class="phase-title flex-1 p-2 rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="${phase.title}" placeholder="Phase title">
-                        <input type="number" class="phase-duration w-24 p-2 rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="${phase.duration}" min="1" placeholder="Seconds">
-                        <span class="remove-phase text-lg">🗑️</span>
-                    `;
+            <input type="text" class="phase-title flex-1 p-2 rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="${phase.title}" placeholder="Phase title">
+            <input type="number" class="phase-duration w-24 p-2 rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="${phase.duration}" min="1" placeholder="Seconds">
+            <span class="remove-phase text-lg">🗑️</span>
+        `;
+
                     timelineEditor.appendChild(phaseRow);
 
-                    // Add remove event
+                    // Hook: title input updates
+                    const titleInput = phaseRow.querySelector('.phase-title');
+                    titleInput.addEventListener('input', (e) => {
+                        state.timelineData[index].title = e.target.value;
+                        updateStateForm(); // 🔄 Sync textarea
+                    });
+
+                    // Hook: duration input updates
+                    const durationInput = phaseRow.querySelector('.phase-duration');
+                    durationInput.addEventListener('input', (e) => {
+                        state.timelineData[index].duration = parseInt(e.target.value) || 0;
+                        updateStateForm(); // 🔄 Sync textarea
+                    });
+
+                    // Hook: remove button
                     phaseRow.querySelector('.remove-phase').addEventListener('click', () => {
                         if (state.timelineData.length > 1) {
                             state.timelineData.splice(index, 1);
-                            initializeTimelineEditor();
+                            initializeTimelineEditor(); // 🔁 Re-render
                         }
                     });
                 });
+
+                // ✅ Initial update
+                updateStateForm();
             }
+
+            function updateStateForm() {
+                const stateForm = document.getElementById('state_form');
+                if (stateForm) {
+                    stateForm.value = JSON.stringify(state, null, 2);
+                }
+            }
+
+
 
             // Initialize timeline visualization
             function initTimeline() {
@@ -425,7 +461,7 @@
                 // FIX: Initialize startTime properly for the first phase
                 if (!state.startTime) {
                     state.startTime = Date.now();
-                    
+
                     // Initialize timeLeft for the first phase
                     if (state.timerMode === 'mundur') {
                         state.timeLeft = state.timelineData[0].duration;
@@ -517,6 +553,7 @@
 
 
             function saveSettings() {
+                console.log(state)
                 state.timelineData = [];
                 document.querySelectorAll('.timeline-row').forEach(row => {
                     const title = row.querySelector('.phase-title').value;
@@ -529,7 +566,11 @@
 
                 state.timerMode = timerModeSelect.value;
                 state.totalDuration = state.timelineData.reduce((total, phase) => total + phase.duration, 0);
-
+                state.isPaused = false;
+                state.startTime = null;
+                state.timeLeft = 0;
+                state.currentPhase = 0;
+                state.timerInterval = null;
                 settingPanel.classList.add('hidden');
 
                 syncStateForm();
@@ -619,6 +660,10 @@
             // Initialize the application
             initApp();
         });
+
+        function copyState() {
+            navigator.clipboard.writeText(JSON.stringify(state, null, 2));
+        }
     </script>
 </body>
 
