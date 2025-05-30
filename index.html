@@ -28,7 +28,8 @@
 <body class="font-sans bg-gray-100 dark:bg-black dark:text-white min-h-screen flex flex-col items-center p-5">
     <div class="min-h-[100vh] flex flex-col items-center">
         <div class="flex flex-col items-center mb-3 z-10 relative px-4 text-center">
-            <div id="elapsed-time" class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl text-gray-900 dark:text-gray-300 flex flex-wrap justify-center items-baseline gap-2">
+            <div id="elapsed-time"
+                class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl text-gray-900 dark:text-gray-300 flex flex-wrap justify-center items-baseline gap-2">
                 <span id="elapsed-text"></span>
                 <span id="elapsed-value">00:00</span>
                 <span class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl">/</span>
@@ -39,29 +40,32 @@
             <div id="timeline-progress"
                 class="absolute top-0 left-0 h-3 bg-yellow-400 z-0 rounded-full transition-all duration-500 ease-in-out"
                 style="width: 0;"></div>
-        
-            <div id="countdown" class="font-bold text-8xl sm:text-8xl md:text-[10rem] lg:text-[14rem] xl:text-[18rem] text-gray-800 dark:text-white leading-none">
+
+            <div id="countdown"
+                class="font-bold text-8xl sm:text-8xl md:text-[10rem] lg:text-[14rem] xl:text-[18rem] text-gray-800 dark:text-white leading-none">
                 00:00
             </div>
-        
-            <div id="phase-title" class="text-2xl sm:text-5xl md:text-6xl lg:text-8xl xl:text-10xl text-yellow-900 mt-2 dark:text-yellow-300">
+
+            <div id="phase-title"
+                class="text-2xl sm:text-5xl md:text-6xl lg:text-8xl xl:text-10xl text-yellow-900 mt-2 dark:text-yellow-300">
                 Phase 1
             </div>
         </div>
         <div class="w-full max-w-6xl px-4 md:px-8 lg:px-12 relative py-6 sm:py-8 md:py-10 mx-auto">
-            
+
             <div class="absolute top-0 left-0 right-0 h-3 bg-gray-300 dark:bg-gray-700 z-0 rounded-full"></div>
 
             <div id="timeline-progress-phase"
                 class="absolute top-0 left-0 h-3 bg-yellow-400 z-0 rounded-full transition-all duration-500 ease-in-out"
                 style="width: 0;"></div>
-            
+
             <div id="timeline-items" class="flex justify-between flex-wrap md:flex-nowrap gap-y-4 mt-2 relative z-10">
                 <!-- Items will be injected here -->
             </div>
         </div>
         <div class="text-xl text-gray-600 uppercase tracking-wide hidden">Current Time</div>
-        <div id="current-time-value" class="text-xl text-black mb-12 uppercase tracking-wide dark:text-white hidden"></div>
+        <div id="current-time-value" class="text-xl text-black mb-12 uppercase tracking-wide dark:text-white hidden">
+        </div>
         <div class="flex gap-3 justify-center mb-8">
             <button id="prev-btn"
                 class="px-5 py-2 text-white text-lg bg-green-600 rounded disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-green-700"
@@ -365,21 +369,41 @@
                 return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
             }
 
-            // Update countdown display
             function updateCountdownDisplay() {
                 if (state.timelineData.length === 0) return;
 
                 countdownElement.textContent = formatTime(state.timeLeft);
                 phaseTitleElement.textContent = state.timelineData[state.currentPhase].title;
+
                 if (state.startTime) {
                     const now = Date.now();
                     const elapsedSeconds = Math.floor((now - state.startTime) / 1000);
                     elapsedValue.textContent = formatTime(elapsedSeconds);
+                    totalValue.textContent = formatTime(state.totalDuration);
+
+                    // If the elapsed time exceeds total duration, stop and mark as completed
+                    if (elapsedSeconds >= state.totalDuration) {
+                        pauseCountdown();
+                        state.timeLeft = 0;
+                        state.currentPhase = state.timelineData.length - 1;
+                        updateProgress();
+
+                        // Update display to total time as elapsed
+                        elapsedValue.textContent = formatTime(state.totalDuration);
+                        countdownElement.textContent = "00:00";
+                        phaseTitleElement.textContent = "Selesai";
+
+                        // Optionally disable controls
+                        pauseBtn.disabled = true;
+                        nextBtn.disabled = true;
+                        prevBtn.disabled = true;
+                    }
                 } else {
                     elapsedValue.textContent = formatTime(0);
+                    totalValue.textContent = formatTime(state.totalDuration);
                 }
-                totalValue.textContent = formatTime(state.totalDuration);
             }
+
 
             // Start/pause countdown
             function toggleCountdown() {
@@ -397,11 +421,16 @@
 
             // Start countdown
             function startCountdown() {
+                // FIX: Initialize startTime properly for the first phase
                 if (!state.startTime) {
-                    state.startTime = Date.now() - (state.timerMode === 'mundur'
-                        ? (state.timelineData.slice(0, state.currentPhase).reduce((t, p) => t + p.duration, 0) + (state.timelineData[state.currentPhase].duration - state.timeLeft)) * 1000
-                        : (state.timelineData.slice(0, state.currentPhase).reduce((t, p) => t + p.duration, 0) + state.timeLeft) * 1000
-                    );
+                    state.startTime = Date.now();
+                    
+                    // Initialize timeLeft for the first phase
+                    if (state.timerMode === 'mundur') {
+                        state.timeLeft = state.timelineData[0].duration;
+                    } else {
+                        state.timeLeft = 0;
+                    }
                 }
 
                 syncStateForm(); // Save startTime and others
@@ -431,7 +460,6 @@
             // Pause countdown
             function pauseCountdown() {
                 clearInterval(state.timerInterval);
-                state.startTime = null;
                 syncStateForm();
             }
 
@@ -479,11 +507,13 @@
 
             // Reset timeline
             function resetTimeline() {
-                alert("Reset All Data? this will clear all data, and can't be undone, all settings will be reset to default").then(() => {
+                const confirmed = confirm("Reset all data? This will clear everything and cannot be undone.");
+                if (confirmed) {
                     localStorage.clear();
                     location.reload();
-                })
+                }
             }
+
 
             function saveSettings() {
                 state.timelineData = [];
@@ -509,6 +539,13 @@
             function initApp() {
                 initializeTimeline();
                 initializeTimelineEditor();
+
+                // FIX: Initialize timeLeft for the current phase
+                if (state.timerMode === 'mundur') {
+                    state.timeLeft = state.timelineData[state.currentPhase].duration;
+                } else {
+                    state.timeLeft = 0;
+                }
 
                 if (state.startTime) {
                     const now = Date.now();
@@ -536,9 +573,6 @@
                         startCountdown();
                         pauseBtn.textContent = 'Pause';
                         return;
-                    } else {
-                        // Time expired
-                        state.startTime = null;
                     }
                 }
 
@@ -555,7 +589,19 @@
             pauseBtn.addEventListener('click', toggleCountdown);
 
             settingsToggle.addEventListener('click', () => {
-                settingPanel.classList.toggle('hidden');
+                const isHidden = settingPanel.classList.contains('hidden');
+                if (isHidden) {
+                    settingPanel.classList.remove('hidden');
+                    requestAnimationFrame(() => {
+                        settingPanel.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start',
+                            inline: 'nearest'
+                        });
+                    });
+                } else {
+                    settingPanel.classList.add('hidden');
+                }
             });
 
             cancelBtn.addEventListener('click', () => {
